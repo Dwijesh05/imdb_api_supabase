@@ -1,1 +1,9 @@
+# Ignore your virtual environment folders
+.venv/
+venv/
+
+# Ignore Python cache folders
+__pycache__/
+
+# Ignore your environment variables/secrets file
 .env
