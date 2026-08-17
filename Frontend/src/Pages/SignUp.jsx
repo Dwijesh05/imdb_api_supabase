@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Clapperboard } from 'lucide-react';
+import axios from 'axios';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const SignUp = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSignUp = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -30,26 +31,22 @@ const SignUp = () => {
       return;
     }
 
-    const existingUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
+    try {
+      // 1. Send the data to your FastAPI backend
+      const response = await axios.post('http://localhost:8000/register', {
+        username: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
 
-    const userExists = existingUsers.some((user) => user.email === formData.email);
-    if (userExists) {
-      setError('An account with this email already exists.');
-      return;
+      // 2. If successful, redirect to the login page
+      console.log("Registration successful!", response.data);
+      navigate('/login');
+
+    } catch (err) {
+      // 3. Catch errors from the backend (like "Email already registered")
+      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
     }
-
-    const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=facc15&color=000000&bold=true`;
-
-    const newUser = {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      avatar: avatar
-    };
-
-    localStorage.setItem('registered_users', JSON.stringify([...existingUsers, newUser]));
-
-    navigate('/login');
   };
 
   return (
@@ -79,7 +76,7 @@ const SignUp = () => {
             name='name'
             value={formData.name}
             onChange={handleChange}
-            placeholder='Full Name' 
+            placeholder='User Name' 
             className='bg-gray-700 text-white outline-none border border-gray-600 focus:border-yellow-400 px-4 py-3 rounded-xl w-full transition-colors'
           />
           <input 

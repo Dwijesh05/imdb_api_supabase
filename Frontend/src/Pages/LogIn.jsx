@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const LogIn = () => {
   const navigate = useNavigate();
@@ -7,7 +8,7 @@ const LogIn = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogIn = (e) => {
+  const handleLogIn = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -16,23 +17,32 @@ const LogIn = () => {
       return;
     }
 
-    
-    const registeredUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
+try {
+  const params = new URLSearchParams();
+  params.append('username', email); 
+  params.append('password', password);
 
-    const user = registeredUsers.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (!user) {
-      setError('Invalid email or password. Please try again or Sign Up.');
-      return;
+  // Add the headers object here 👇
+  const response = await axios.post('http://localhost:8000/login', params, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
     }
+  });
 
-    
-    localStorage.setItem('current_user', JSON.stringify(user));
+  localStorage.setItem('access_token', response.data.access_token);
+  
+  const storedName = response.data.username || email.split('@')[0];
+  localStorage.setItem('current_user', JSON.stringify({
+    email: email,
+    name: storedName,
+    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=facc15&color=000000&bold=true`
+  }));
 
+  navigate('/');
 
-    navigate('/');
+} catch (err) {
+  setError(err.response?.data?.detail || 'Invalid email or password.');
+}
   };
 
   return (

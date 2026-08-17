@@ -9,18 +9,29 @@ const Navbar = () => {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    // 1. Check for BOTH the FastAPI token and the user data
+    const token = localStorage.getItem('access_token');
     const savedUser = localStorage.getItem('current_user');
-    if (savedUser) {
+    
+    if (token && savedUser) {
       setCurrentUser(JSON.parse(savedUser));
+    } else {
+      setCurrentUser(null);
     }
   }, []);
 
   const handleLogout = () => {
+    // 2. Clear the FastAPI token and user data on logout
+    localStorage.removeItem('access_token');
     localStorage.removeItem('current_user');
     setCurrentUser(null);
     setShowProfileMenu(false);
     navigate('/login');
   };
+
+  // 3. Create fallbacks in case the user doesn't have a name/avatar saved in the new database yet
+  const displayName = currentUser?.name || currentUser?.email?.split('@')[0] || 'User';
+  const displayAvatar = currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=facc15&color=000000&bold=true`;
 
   return (
     <div className='flex justify-between items-center p-4 bg-gray-900 border-b border-gray-800 text-white relative z-40'>
@@ -119,12 +130,12 @@ const Navbar = () => {
               className="flex items-center gap-2 bg-gray-800 border border-yellow-400/40 p-1.5 pr-3 rounded-full hover:border-yellow-400 transition-all cursor-pointer"
             >
               <img
-                src={currentUser.avatar}
-                alt={currentUser.name}
+                src={displayAvatar}
+                alt={displayName}
                 className="w-8 h-8 rounded-full object-cover border border-yellow-400"
               />
               <span className="text-sm font-bold text-gray-200 max-w-[100px] truncate">
-                {currentUser.name}
+                {displayName}
               </span>
             </button>
 
