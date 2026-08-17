@@ -14,29 +14,45 @@ const MovieDetails = ({ movieData, onClose }) => {
 
   if (!movieData) return null;
 
+  // Support both camelCase and snake_case property lookups seamlessly
   const movie = movieData;
-  const title = movie?.primaryTitle || movie?.title || 'Untitled';
+  const title = movie?.primaryTitle || movie?.primary_title || movie?.title || 'Untitled';
+  const originalTitle = movie?.originalTitle || movie?.original_title;
+  const contentRating = movie?.contentRating || movie?.content_rating;
+  const startYear = movie?.startYear || movie?.start_year || movie?.year;
+  const runtimeMinutes = movie?.runtimeMinutes || movie?.runtime_minutes || movie?.runtime;
+  const averageRating = movie?.averageRating ?? movie?.average_rating ?? movie?.rating;
+  const numVotes = movie?.numVotes ?? movie?.num_votes;
+  const metascore = movie?.metascore;
+  const description = movie?.description || movie?.plot || movie?.overview;
+  const releaseDate = movie?.releaseDate || movie?.release_date;
+  const grossWorldwide = movie?.grossWorldwide ?? movie?.gross_worldwide;
+  const budget = movie?.budget;
+  const filmingLocations = movie?.filmingLocations || movie?.filming_locations || [];
+  const productionCompanies = movie?.productionCompanies || movie?.production_companies || [];
+  const countriesOfOrigin = movie?.countriesOfOrigin || movie?.countries_of_origin || [];
+  const spokenLanguages = movie?.spokenLanguages || movie?.spoken_languages || [];
+  const genres = movie?.genres || [];
+  const interests = movie?.interests || [];
+  const externalLinks = movie?.externalLinks || movie?.external_links || [];
 
   const formatCurrency = (val) => {
     if (!val) return null;
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+    const num = Number(val);
+    if (isNaN(num)) return val;
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
   };
 
   const rawPrimaryImage = typeof movie?.primaryImage === 'string' 
     ? movie.primaryImage 
-    : movie?.primaryImage?.url || movie?.thumbnails?.[1]?.url || movie?.thumbnails?.[0]?.url;
+    : movie?.primaryImage?.url || movie?.primary_image || movie?.thumbnails?.[1]?.url || movie?.thumbnails?.[0]?.url;
 
   const primaryPoster = rawPrimaryImage 
     ? rawPrimaryImage.replace(/\._V1_.*?\.(jpg|jpeg|png)$/i, '.$1') 
     : 'https://via.placeholder.com/300x450?text=No+Poster';
 
-  const titleId = movie?.id || movie?.imdbId || movie?.tconst;
+  const titleId = movie?.id;
   const imdbWebUrl = titleId ? `https://www.imdb.com/title/${titleId}/` : null;
-
-  const rating = movie?.averageRating || movie?.rating;
-  const year = movie?.startYear || movie?.year;
-  const runtime = movie?.runtimeMinutes || movie?.runtime;
-  const description = movie?.description || movie?.plot || movie?.overview;
 
   return (
     <div className="fixed inset-0 z-50 bg-gray-950 text-white flex flex-col overflow-y-auto animate-fadeIn">
@@ -83,14 +99,14 @@ const MovieDetails = ({ movieData, onClose }) => {
                   {movie.type}
                 </span>
               )}
-              {movie.contentRating && (
+              {contentRating && (
                 <span className="text-yellow-400 border border-yellow-400/60 bg-black/60 px-2.5 py-0.5 rounded font-bold text-xs">
-                  {movie.contentRating}
+                  {contentRating}
                 </span>
               )}
-              {movie.metascore && (
+              {metascore && (
                 <span className="bg-green-600 text-white px-2 py-0.5 rounded font-black text-xs">
-                  Metascore {movie.metascore}
+                  Metascore {metascore}
                 </span>
               )}
             </div>
@@ -99,16 +115,15 @@ const MovieDetails = ({ movieData, onClose }) => {
               {title}
             </h1>
 
-            {movie.originalTitle && movie.originalTitle !== title && (
+            {originalTitle && originalTitle !== title && (
               <p className="text-gray-300 italic text-sm md:text-base">
-                Original Title: {movie.originalTitle}
+                Original Title: {originalTitle}
               </p>
             )}
 
-
-            {movie.interests && movie.interests.length > 0 && (
+            {interests && interests.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-1">
-                {movie.interests.map((interest, idx) => (
+                {interests.map((interest, idx) => (
                   <span key={idx} className="text-xs bg-yellow-400/20 text-yellow-300 border border-yellow-400/40 px-2.5 py-1 rounded-full font-medium">
                     #{interest}
                   </span>
@@ -130,10 +145,10 @@ const MovieDetails = ({ movieData, onClose }) => {
             </div>
             <div>
               <div className="text-xl font-black text-yellow-400">
-                {rating ? `${rating} / 10` : 'N/A'}
+                {averageRating ? `${averageRating} / 10` : 'N/A'}
               </div>
               <div className="text-xs text-gray-400">
-                {movie.numVotes ? `${movie.numVotes.toLocaleString()} votes` : 'IMDb Rating'}
+                {numVotes ? `${Number(numVotes).toLocaleString()} votes` : 'IMDb Rating'}
               </div>
             </div>
           </div>
@@ -144,7 +159,7 @@ const MovieDetails = ({ movieData, onClose }) => {
             </div>
             <div>
               <div className="text-xl font-black text-white">
-                {year || 'N/A'}
+                {startYear || 'N/A'}
               </div>
               <div className="text-xs text-gray-400">Release Year</div>
             </div>
@@ -156,7 +171,7 @@ const MovieDetails = ({ movieData, onClose }) => {
             </div>
             <div>
               <div className="text-xl font-black text-white">
-                {runtime ? `${runtime} min` : 'N/A'}
+                {runtimeMinutes ? `${runtimeMinutes} min` : 'N/A'}
               </div>
               <div className="text-xs text-gray-400">Runtime</div>
             </div>
@@ -168,8 +183,8 @@ const MovieDetails = ({ movieData, onClose }) => {
             </div>
             <div>
               <div className="text-xl font-black text-white truncate">
-                {movie.productionCompanies?.[0]?.grossWorldwide || movie.grossWorldwide
-                  ? `$${((movie.productionCompanies?.[0]?.grossWorldwide || movie.grossWorldwide) / 1000000).toFixed(2)}M` 
+                {grossWorldwide 
+                  ? `$${(Number(grossWorldwide) / 1000000).toFixed(2)}M` 
                   : 'N/A'}
               </div>
               <div className="text-xs text-gray-400">Box Office Gross</div>
@@ -191,32 +206,34 @@ const MovieDetails = ({ movieData, onClose }) => {
               </p>
             </div>
 
-            {(movie.filmingLocations?.[0] || movie.productionCompanies?.[0]?.name) && (
+            {(filmingLocations?.[0] || productionCompanies?.[0]) && (
               <div className="space-y-4">
                 <h3 className="text-xl font-bold text-yellow-400 border-l-4 border-yellow-400 pl-3">
                   Production & Location
                 </h3>
                  
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {movie.filmingLocations?.[0] && (
+                  {filmingLocations?.[0] && (
                     <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-800 flex items-start gap-3">
                       <MapPin size={20} className="text-yellow-400 shrink-0 mt-0.5" />
                       <div>
                         <div className="text-xs text-gray-400 uppercase font-bold">Filming Location</div>
                         <div className="text-sm font-semibold text-gray-200 mt-1">
-                          {movie.filmingLocations[0]}
+                          {filmingLocations[0]}
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {movie.productionCompanies?.[0]?.name && (
+                  {productionCompanies?.[0] && (
                     <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-800 flex items-start gap-3">
                       <Building2 size={20} className="text-yellow-400 shrink-0 mt-0.5" />
                       <div>
                         <div className="text-xs text-gray-400 uppercase font-bold">Production Company</div>
                         <div className="text-sm font-semibold text-gray-200 mt-1">
-                          {movie.productionCompanies.map(c => c.name).join(', ')}
+                          {Array.isArray(productionCompanies) 
+                            ? productionCompanies.map(c => typeof c === 'string' ? c : c.name).filter(Boolean).join(', ')
+                            : String(productionCompanies)}
                         </div>
                       </div>
                     </div>
@@ -229,11 +246,11 @@ const MovieDetails = ({ movieData, onClose }) => {
 
           <div className="space-y-8">
 
-            {movie.genres && movie.genres.length > 0 && (
+            {genres && genres.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-lg font-bold text-yellow-400">Genres</h3>
                 <div className="flex flex-wrap gap-2">
-                  {movie.genres.map((genre, idx) => (
+                  {genres.map((genre, idx) => (
                     <span key={idx} className="bg-gray-900 text-yellow-300 border border-yellow-400/40 px-4 py-1.5 rounded-lg text-sm font-bold">
                       {typeof genre === 'string' ? genre : genre.text}
                     </span>
@@ -250,31 +267,31 @@ const MovieDetails = ({ movieData, onClose }) => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between border-b border-gray-800/60 pb-2">
                   <span className="text-gray-400">Release Date</span>
-                  <span className="text-white font-semibold">{movie.releaseDate || 'N/A'}</span>
+                  <span className="text-white font-semibold">{releaseDate || 'N/A'}</span>
                 </div>
 
                 <div className="flex justify-between border-b border-gray-800/60 pb-2">
                   <span className="text-gray-400">Origin Country</span>
-                  <span className="text-white font-semibold">{movie.countriesOfOrigin?.join(', ') || 'N/A'}</span>
+                  <span className="text-white font-semibold">{countriesOfOrigin?.join(', ') || 'N/A'}</span>
                 </div>
 
                 <div className="flex justify-between border-b border-gray-800/60 pb-2">
                   <span className="text-gray-400">Spoken Languages</span>
-                  <span className="text-white font-semibold uppercase">{movie.spokenLanguages?.join(', ') || 'N/A'}</span>
+                  <span className="text-white font-semibold uppercase">{spokenLanguages?.join(', ') || 'N/A'}</span>
                 </div>
 
-                {movie.productionCompanies?.[0]?.budget && (
+                {budget && (
                   <div className="flex justify-between border-b border-gray-800/60 pb-2">
                     <span className="text-gray-400">Budget</span>
                     <span className="text-yellow-400 font-semibold">
-                      {formatCurrency(movie.productionCompanies[0].budget)}
+                      {formatCurrency(budget)}
                     </span>
                   </div>
                 )}
               </div>
             </div>
 
-            {(imdbWebUrl || (movie.externalLinks && movie.externalLinks.length > 0)) && (
+            {(imdbWebUrl || (externalLinks && externalLinks.length > 0)) && (
               <div className="space-y-3">
                 <h3 className="text-lg font-bold text-yellow-400">External Links</h3>
                 <div className="flex flex-col gap-2">
@@ -291,7 +308,7 @@ const MovieDetails = ({ movieData, onClose }) => {
                     </a>
                   )}
 
-                  {movie.externalLinks?.map((link, idx) => (
+                  {externalLinks?.map((link, idx) => (
                     <a 
                       key={idx}
                       href={link} 
